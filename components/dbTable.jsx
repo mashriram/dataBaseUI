@@ -55,25 +55,38 @@ const columns = [
 
 export default function DbTable(props) {
   const [attributes, setAttributes] = useState([]);
-
+  const [tableData, setTableData] = useState([]);
   useEffect(() => {
     console.log("inside useEffect");
     async function getAttributes() {
-      let resp = await axios.get(
-        "http://localhost:8080/tables/" + props.tableName,
-        {}
-      );
-      let response = resp.data.map((attr) => {
-        return { key: attr, label: attr.toUpperCase() };
-      });
-      setAttributes(response);
-      console.log(response);
+      if (props.tableName && props.tableName != "undefined") {
+        let resp = await axios.get(
+          "http://localhost:8080/tables/" + props.tableName,
+          {}
+        );
+        let response = resp.data.map((attr) => {
+          return { key: attr, label: attr.toUpperCase() };
+        });
+        setAttributes(response);
+        console.log(response);
+      }
     }
+    async function getData() {
+      if (props.tableName && props.tableName != "undefined") {
+        let resp = await axios.get(
+          "http://localhost:8080/" + props.tableName + "s",
+          {}
+        );
+        let data = resp.data._embedded[props.tableName + "s"];
+        setTableData(resp.data);
+        console.log(data);
+      }
+    }
+    getData();
     getAttributes();
   }, [props.tableName]);
 
   function getTableHeader() {
-    console.log("attributesH: ", attributes.length);
     if (attributes.length == 0) {
       return (
         <TableHeader>
@@ -88,7 +101,6 @@ export default function DbTable(props) {
     );
   }
   function getTableBody() {
-    console.log("attributesB: ", attributes.length);
     if (attributes.length == 0) {
       return (
         <TableBody>
