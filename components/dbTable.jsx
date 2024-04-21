@@ -78,7 +78,7 @@ export default function DbTable(props) {
           {}
         );
         let data = resp.data._embedded[props.tableName + "s"];
-        setTableData(resp.data);
+        setTableData(data);
         console.log(data);
       }
     }
@@ -111,7 +111,7 @@ export default function DbTable(props) {
       );
     }
     return (
-      <TableBody items={rows}>
+      <TableBody items={tableData}>
         {(item) => (
           <TableRow key={item.key}>
             {(columnKey) => (
