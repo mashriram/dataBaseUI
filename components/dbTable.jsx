@@ -9,56 +9,17 @@ import {
   TableCell,
   getKeyValue,
 } from "@nextui-org/react";
+
 import axios from "axios";
-
-const rows = [
-  {
-    key: "1",
-    name: "Tony Reichert",
-    role: "CEO",
-    status: "Active",
-  },
-  {
-    key: "2",
-    name: "Zoey Lang",
-    role: "Technical Lead",
-    status: "Paused",
-  },
-  {
-    key: "3",
-    name: "Jane Fisher",
-    role: "Senior Developer",
-    status: "Active",
-  },
-  {
-    key: "4",
-    name: "William Howard",
-    role: "Community Manager",
-    status: "Vacation",
-  },
-];
-
-const columns = [
-  {
-    key: "name",
-    label: "NAME",
-  },
-  {
-    key: "role",
-    label: "ROLE",
-  },
-  {
-    key: "status",
-    label: "STATUS",
-  },
-];
+import Link from "next/link";
 
 export default function DbTable(props) {
   const [attributes, setAttributes] = useState([]);
   const [tableData, setTableData] = useState([]);
   useEffect(() => {
     console.log("inside useEffect");
-    async function getAttributes() {
+
+    async function getData() {
       if (props.tableName && props.tableName != "undefined") {
         let resp = await axios.get(
           "http://localhost:8080/tables/" + props.tableName,
@@ -70,8 +31,7 @@ export default function DbTable(props) {
         setAttributes(response);
         console.log(response);
       }
-    }
-    async function getData() {
+
       if (props.tableName && props.tableName != "undefined") {
         let resp = await axios.get(
           "http://localhost:8080/" + props.tableName + "s",
@@ -83,7 +43,6 @@ export default function DbTable(props) {
       }
     }
     getData();
-    getAttributes();
   }, [props.tableName]);
 
   function getTableHeader() {
@@ -100,6 +59,25 @@ export default function DbTable(props) {
       </TableHeader>
     );
   }
+  function getTableCell(item, columnKey) {
+    console.log("item['columnKey']:", item[columnKey]);
+    if (
+      typeof item[columnKey] == "string" &&
+      item[columnKey].indexOf("http") != -1
+    ) {
+      console.log("llinkkk");
+      const parts = item[columnKey].split("/");
+      const href = parts[parts.length - 2];
+      return (
+        <Link href={item[columnKey]}>
+          {columnKey} {"-"}
+          {href}
+        </Link>
+      );
+    }
+    return getKeyValue(item, columnKey);
+  }
+
   function getTableBody() {
     if (attributes.length == 0) {
       return (
@@ -110,12 +88,27 @@ export default function DbTable(props) {
         </TableBody>
       );
     }
+    for (const data of tableData) {
+      for (const attribute of attributes) {
+        const key = attribute["key"];
+        if (!data[key]) {
+          if (data["_links"][key]) {
+            const val = data["_links"][key]["href"];
+            data[key] = val;
+          }
+        }
+      }
+    }
+
+    console.log("tableData: ", tableData);
+    console.log(getKeyValue(tableData[0], "arrivalTime"));
+
     return (
       <TableBody items={tableData}>
         {(item) => (
           <TableRow key={item.key}>
             {(columnKey) => (
-              <TableCell>{getKeyValue(item, columnKey)}</TableCell>
+              <TableCell>{getTableCell(item, columnKey)}</TableCell>
             )}
           </TableRow>
         )}
